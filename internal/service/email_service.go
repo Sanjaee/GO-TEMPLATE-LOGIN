@@ -139,7 +139,7 @@ Tim YouApp
 
 func (s *emailService) SendResetPasswordEmail(to, resetLink string) error {
 	subject := "Reset Password"
-	
+
 	htmlBody := fmt.Sprintf(`
 <!DOCTYPE html>
 <html>

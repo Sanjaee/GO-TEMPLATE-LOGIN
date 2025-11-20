@@ -453,7 +453,7 @@ func (s *authService) RequestResetPassword(email string) error {
 			clientURL = s.config.ClientURL
 		}
 		resetLink := fmt.Sprintf("%s/auth/reset-password?token=%s", clientURL, resetToken)
-		
+
 		emailMsg := util.EmailMessage{
 			To:      email,
 			Subject: "Reset Password",
