@@ -21,7 +21,7 @@ type AuthService interface {
 	GoogleOAuth(req GoogleOAuthRequest) (*AuthResponse, error)
 	RefreshToken(refreshToken string) (*AuthResponse, error)
 	RequestResetPassword(email string) error
-	VerifyResetPassword(email, otpCode, newPassword string) (*AuthResponse, error)
+	VerifyResetPassword(email, otpCode, newPassword string) error
 	ResetPassword(token, newPassword string) (*AuthResponse, error)
 	VerifyEmail(token string) (*AuthResponse, error)
 	GetMe(userID string) (*model.User, error)
@@ -426,86 +426,59 @@ func (s *authService) RefreshToken(refreshToken string) (*AuthResponse, error) {
 }
 
 func (s *authService) RequestResetPassword(email string) error {
-	user, err := s.userRepo.FindByEmail(email)
+	_, err := s.userRepo.FindByEmail(email)
 	if err != nil {
 		// Don't reveal if user exists or not
 		return nil
 	}
 
-	// Generate reset password token (JWT)
-	resetToken, err := util.GenerateResetPasswordToken(user.ID, user.Email, s.jwtSecret)
-	if err != nil {
-		return fmt.Errorf("failed to generate reset token: %w", err)
+	// Generate OTP for reset password
+	otpCode := generateOTP()
+	otpExpiresAt := time.Now().Add(10 * time.Minute)
+
+	if err := s.userRepo.UpdateOTP(email, otpCode, otpExpiresAt); err != nil {
+		return fmt.Errorf("failed to update OTP: %w", err)
 	}
 
-	expiresAt := time.Now().Add(1 * time.Hour)
-
-	if err := s.userRepo.UpdateResetToken(email, resetToken, expiresAt); err != nil {
-		return fmt.Errorf("failed to update reset token: %w", err)
-	}
-
-	// Send reset password email via RabbitMQ with link
+	// Send OTP email via RabbitMQ
 	s.ensureRabbitMQ() // Try to reconnect if needed
 	if s.rabbitMQ != nil {
-		// Build reset password link
-		clientURL := "http://localhost:3000" // Default fallback
-		if s.config != nil && s.config.ClientURL != "" {
-			clientURL = s.config.ClientURL
-		}
-		resetLink := fmt.Sprintf("%s/auth/reset-password?token=%s", clientURL, resetToken)
-
 		emailMsg := util.EmailMessage{
 			To:      email,
-			Subject: "Reset Password",
-			Body:    resetLink, // Pass the link as body
-			Type:    "reset_password",
+			Subject: "Kode Reset Password",
+			Body:    otpCode,
+			Type:    "otp",
 		}
 		if err := s.rabbitMQ.PublishEmail(emailMsg); err != nil {
-			log.Printf("Failed to publish reset password email: %v\n", err)
+			log.Printf("Failed to publish reset password OTP email: %v\n", err)
 		} else {
-			log.Printf("Reset password email queued successfully for %s", email)
+			log.Printf("Reset password OTP email queued successfully for %s", email)
 		}
 	} else {
-		log.Printf("Warning: RabbitMQ not available, reset password email not sent for %s", email)
+		log.Printf("Warning: RabbitMQ not available, reset password OTP email not sent for %s", email)
 	}
 
 	return nil
 }
 
-func (s *authService) VerifyResetPassword(email, otpCode, newPassword string) (*AuthResponse, error) {
+func (s *authService) VerifyResetPassword(email, otpCode, newPassword string) error {
 	user, err := s.userRepo.VerifyOTP(email, otpCode)
 	if err != nil {
-		return nil, errors.New("invalid or expired OTP")
+		return errors.New("invalid or expired OTP")
 	}
 
 	// Hash new password
 	passwordHash, err := util.HashPassword(newPassword)
 	if err != nil {
-		return nil, fmt.Errorf("failed to hash password: %w", err)
+		return fmt.Errorf("failed to hash password: %w", err)
 	}
 
 	// Update password
 	if err := s.userRepo.UpdatePassword(user.ID, passwordHash); err != nil {
-		return nil, fmt.Errorf("failed to update password: %w", err)
+		return fmt.Errorf("failed to update password: %w", err)
 	}
 
-	// Generate tokens
-	accessToken, err := util.GenerateAccessToken(user.ID, user.Email, user.UserType, s.jwtSecret)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate access token: %w", err)
-	}
-
-	refreshToken, err := util.GenerateRefreshToken(user.ID, user.Email, user.UserType, s.jwtSecret)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate refresh token: %w", err)
-	}
-
-	return &AuthResponse{
-		User:         user,
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-		ExpiresIn:    900,
-	}, nil
+	return nil
 }
 
 func (s *authService) ResetPassword(token, newPassword string) (*AuthResponse, error) {

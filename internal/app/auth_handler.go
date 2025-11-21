@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
@@ -8,6 +9,7 @@ import (
 	"yourapp/internal/util"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 type AuthHandler struct {
@@ -162,11 +164,11 @@ func (h *AuthHandler) RequestResetPassword(c *gin.Context) {
 
 	if err := h.authService.RequestResetPassword(req.Email); err != nil {
 		// Don't reveal if user exists or not
-		util.SuccessResponse(c, http.StatusOK, "If email exists, reset link has been sent", nil)
+		util.SuccessResponse(c, http.StatusOK, "If email exists, OTP has been sent", nil)
 		return
 	}
 
-	util.SuccessResponse(c, http.StatusOK, "If email exists, reset link has been sent", nil)
+	util.SuccessResponse(c, http.StatusOK, "If email exists, OTP has been sent", nil)
 }
 
 // VerifyResetPassword handles password reset with OTP verification
@@ -175,21 +177,52 @@ func (h *AuthHandler) VerifyResetPassword(c *gin.Context) {
 	var req struct {
 		Email       string `json:"email" binding:"required,email"`
 		OTPCode     string `json:"otp_code" binding:"required"`
-		NewPassword string `json:"new_password" binding:"required,min=8"`
+		NewPassword string `json:"new_password" binding:"required,min=8,max=128"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		util.BadRequest(c, err.Error())
+		// Parse validation errors and provide user-friendly messages
+		var validationErr validator.ValidationErrors
+		if errors.As(err, &validationErr) {
+			for _, fieldErr := range validationErr {
+				switch fieldErr.Field() {
+				case "NewPassword":
+					if fieldErr.Tag() == "min" {
+						util.BadRequest(c, "Password minimal 8 karakter")
+						return
+					} else if fieldErr.Tag() == "max" {
+						util.BadRequest(c, "Password maksimal 128 karakter")
+						return
+					}
+				case "Email":
+					util.BadRequest(c, "Format email tidak valid")
+					return
+				case "OTPCode":
+					util.BadRequest(c, "Kode OTP wajib diisi")
+					return
+				}
+			}
+		}
+		// Check for specific error messages
+		errStr := err.Error()
+		if strings.Contains(errStr, "min") && strings.Contains(errStr, "NewPassword") {
+			util.BadRequest(c, "Password minimal 8 karakter")
+			return
+		}
+		if strings.Contains(errStr, "max") && strings.Contains(errStr, "NewPassword") {
+			util.BadRequest(c, "Password maksimal 128 karakter")
+			return
+		}
+		util.BadRequest(c, errStr)
 		return
 	}
 
-	resp, err := h.authService.VerifyResetPassword(req.Email, req.OTPCode, req.NewPassword)
-	if err != nil {
+	if err := h.authService.VerifyResetPassword(req.Email, req.OTPCode, req.NewPassword); err != nil {
 		util.ErrorResponse(c, http.StatusBadRequest, err.Error(), nil)
 		return
 	}
 
-	util.SuccessResponse(c, http.StatusOK, "Password reset successfully", resp)
+	util.SuccessResponse(c, http.StatusOK, "Password reset successfully. Please login with your new password.", nil)
 }
 
 // ResetPassword handles password reset with token
