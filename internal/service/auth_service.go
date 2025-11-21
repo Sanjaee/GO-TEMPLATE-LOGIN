@@ -211,6 +211,16 @@ func (s *authService) Login(req LoginRequest) (*AuthResponse, error) {
 		return nil, errors.New("invalid email or password")
 	}
 
+	// Check if user registered with Google instead of credential
+	if user.LoginType == "google" {
+		return nil, errors.New("email sudah terdaftar dengan Google. Silakan login dengan Google")
+	}
+
+	// Check if user registered with credential
+	if user.LoginType != "credential" {
+		return nil, errors.New("invalid email or password")
+	}
+
 	// Check password
 	if !util.CheckPasswordHash(req.Password, user.PasswordHash) {
 		return nil, errors.New("invalid email or password")
@@ -362,8 +372,9 @@ func (s *authService) GoogleOAuth(req GoogleOAuthRequest) (*AuthResponse, error)
 	// Check if email already exists
 	existingUser, _ := s.userRepo.FindByEmail(req.Email)
 	if existingUser != nil {
+		// Check if user registered with credential instead of Google
 		if existingUser.LoginType == "credential" {
-			return nil, errors.New("email already registered with password. Please login with email and password")
+			return nil, errors.New("email sudah terdaftar dengan email dan password. Silakan login dengan email dan password")
 		}
 		if existingUser.GoogleID != nil && *existingUser.GoogleID != req.GoogleID {
 			return nil, errors.New("email already registered with different Google account")
@@ -436,12 +447,19 @@ func (s *authService) RefreshToken(refreshToken string) (*AuthResponse, error) {
 }
 
 func (s *authService) RequestResetPassword(email string) error {
-	_, err := s.userRepo.FindByEmail(email)
-	if err != nil {
-		// Don't reveal if user exists or not
-		return nil
+	// Check if email exists in database first - must exist before sending email
+	user, err := s.userRepo.FindByEmail(email)
+	if err != nil || user == nil {
+		// Email doesn't exist in database - return error
+		return errors.New("email tidak terdaftar di sistem")
 	}
 
+	// Check if user registered with credential (not Google) - must be credential to reset password
+	if user.LoginType != "credential" {
+		return errors.New("reset password hanya tersedia untuk akun yang terdaftar dengan email dan password")
+	}
+
+	// User exists and has credential login type - proceed with OTP generation
 	// Generate OTP for reset password
 	otpCode := generateOTP()
 	otpExpiresAt := time.Now().Add(10 * time.Minute)
@@ -451,7 +469,7 @@ func (s *authService) RequestResetPassword(email string) error {
 	}
 
 	// Send OTP email via RabbitMQ asynchronously (non-blocking)
-	// Publish to queue immediately without waiting for confirmation
+	// Only send if user exists in database (checked above)
 	go func() {
 		s.ensureRabbitMQ() // Try to reconnect if needed
 		if s.rabbitMQ != nil {
@@ -459,7 +477,7 @@ func (s *authService) RequestResetPassword(email string) error {
 				To:      email,
 				Subject: "Kode Reset Password",
 				Body:    otpCode,
-				Type:    "otp",
+				Type:    "reset_password",
 			}
 			if err := s.rabbitMQ.PublishEmail(emailMsg); err != nil {
 				log.Printf("Failed to publish reset password OTP email: %v\n", err)
@@ -476,9 +494,27 @@ func (s *authService) RequestResetPassword(email string) error {
 }
 
 func (s *authService) VerifyResetPassword(email, otpCode, newPassword string) error {
+	// First, verify that email exists in database and check login type before OTP verification
+	existingUser, err := s.userRepo.FindByEmail(email)
+	if err != nil || existingUser == nil {
+		// Email doesn't exist in database - return error
+		return errors.New("invalid or expired OTP")
+	}
+
+	// Check if user registered with credential (not Google) - must be credential to reset password
+	if existingUser.LoginType != "credential" {
+		return errors.New("reset password hanya tersedia untuk akun yang terdaftar dengan email dan password")
+	}
+
+	// Verify OTP code - this will also validate email, OTP, and expiry
 	user, err := s.userRepo.VerifyOTP(email, otpCode)
 	if err != nil {
 		return errors.New("invalid or expired OTP")
+	}
+
+	// Double check login type after OTP verification (should be same, but extra security)
+	if user.LoginType != "credential" {
+		return errors.New("reset password hanya tersedia untuk akun yang terdaftar dengan email dan password")
 	}
 
 	// Hash new password
@@ -487,7 +523,7 @@ func (s *authService) VerifyResetPassword(email, otpCode, newPassword string) er
 		return fmt.Errorf("failed to hash password: %w", err)
 	}
 
-	// Update password
+	// Update password and clear OTP (OTP already cleared by VerifyOTP)
 	if err := s.userRepo.UpdatePassword(user.ID, passwordHash); err != nil {
 		return fmt.Errorf("failed to update password: %w", err)
 	}

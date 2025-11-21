@@ -163,12 +163,12 @@ func (h *AuthHandler) RequestResetPassword(c *gin.Context) {
 	}
 
 	if err := h.authService.RequestResetPassword(req.Email); err != nil {
-		// Don't reveal if user exists or not
-		util.SuccessResponse(c, http.StatusOK, "If email exists, OTP has been sent", nil)
+		// Return error if email doesn't exist or other error occurs
+		util.ErrorResponse(c, http.StatusBadRequest, err.Error(), nil)
 		return
 	}
 
-	util.SuccessResponse(c, http.StatusOK, "If email exists, OTP has been sent", nil)
+	util.SuccessResponse(c, http.StatusOK, "Kode OTP telah dikirim ke email Anda", nil)
 }
 
 // VerifyResetPassword handles password reset with OTP verification
