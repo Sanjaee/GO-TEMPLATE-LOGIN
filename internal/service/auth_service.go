@@ -175,25 +175,29 @@ func (s *authService) Register(req RegisterRequest) (*RegisterResponse, error) {
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
 
-	// Send OTP email via RabbitMQ
-	s.ensureRabbitMQ() // Try to reconnect if needed
-	if s.rabbitMQ != nil {
-		emailMsg := util.EmailMessage{
-			To:      req.Email,
-			Subject: "Kode Verifikasi Email",
-			Body:    otpCode,
-			Type:    "otp",
-		}
-		if err := s.rabbitMQ.PublishEmail(emailMsg); err != nil {
-			// Log error but don't fail registration
-			log.Printf("Failed to publish OTP email: %v\n", err)
+	// Send OTP email via RabbitMQ asynchronously (non-blocking)
+	// Same logic as reset password - send to queue immediately without waiting
+	go func() {
+		s.ensureRabbitMQ() // Try to reconnect if needed
+		if s.rabbitMQ != nil {
+			emailMsg := util.EmailMessage{
+				To:      req.Email,
+				Subject: "Kode Verifikasi Email",
+				Body:    otpCode,
+				Type:    "otp",
+			}
+			if err := s.rabbitMQ.PublishEmail(emailMsg); err != nil {
+				// Log error but don't fail registration
+				log.Printf("Failed to publish OTP email: %v\n", err)
+			} else {
+				log.Printf("OTP email queued successfully for %s", req.Email)
+			}
 		} else {
-			log.Printf("OTP email queued successfully for %s", req.Email)
+			log.Printf("Warning: RabbitMQ not available, OTP email not sent for %s", req.Email)
 		}
-	} else {
-		log.Printf("Warning: RabbitMQ not available, OTP email not sent for %s", req.Email)
-	}
+	}()
 
+	// Return immediately without waiting for email to be sent
 	return &RegisterResponse{
 		Message:              "Registration successful. Please verify your email with OTP.",
 		User:                 user,
@@ -224,23 +228,25 @@ func (s *authService) Login(req LoginRequest) (*AuthResponse, error) {
 		otpExpiresAt := time.Now().Add(10 * time.Minute)
 		s.userRepo.UpdateOTP(req.Email, otpCode, otpExpiresAt)
 
-		// Send OTP email via RabbitMQ
-		s.ensureRabbitMQ() // Try to reconnect if needed
-		if s.rabbitMQ != nil {
-			emailMsg := util.EmailMessage{
-				To:      req.Email,
-				Subject: "Kode Verifikasi Email",
-				Body:    otpCode,
-				Type:    "otp",
-			}
-			if err := s.rabbitMQ.PublishEmail(emailMsg); err != nil {
-				log.Printf("Failed to publish OTP email: %v\n", err)
+		// Send OTP email via RabbitMQ asynchronously (non-blocking)
+		go func() {
+			s.ensureRabbitMQ() // Try to reconnect if needed
+			if s.rabbitMQ != nil {
+				emailMsg := util.EmailMessage{
+					To:      req.Email,
+					Subject: "Kode Verifikasi Email",
+					Body:    otpCode,
+					Type:    "otp",
+				}
+				if err := s.rabbitMQ.PublishEmail(emailMsg); err != nil {
+					log.Printf("Failed to publish OTP email: %v\n", err)
+				} else {
+					log.Printf("OTP email queued successfully for %s", req.Email)
+				}
 			} else {
-				log.Printf("OTP email queued successfully for %s", req.Email)
+				log.Printf("Warning: RabbitMQ not available, OTP email not sent for %s", req.Email)
 			}
-		} else {
-			log.Printf("Warning: RabbitMQ not available, OTP email not sent for %s", req.Email)
-		}
+		}()
 
 		return nil, errors.New("email not verified. Please verify your email first")
 	}
@@ -309,24 +315,28 @@ func (s *authService) ResendOTP(email string) error {
 		return fmt.Errorf("failed to update OTP: %w", err)
 	}
 
-	// Send OTP email via RabbitMQ
-	s.ensureRabbitMQ() // Try to reconnect if needed
-	if s.rabbitMQ != nil {
-		emailMsg := util.EmailMessage{
-			To:      email,
-			Subject: "Kode Verifikasi Email",
-			Body:    otpCode,
-			Type:    "otp",
-		}
-		if err := s.rabbitMQ.PublishEmail(emailMsg); err != nil {
-			log.Printf("Failed to publish OTP email: %v\n", err)
+	// Send OTP email via RabbitMQ asynchronously (non-blocking)
+	// Same logic as reset password - send to queue immediately without waiting
+	go func() {
+		s.ensureRabbitMQ() // Try to reconnect if needed
+		if s.rabbitMQ != nil {
+			emailMsg := util.EmailMessage{
+				To:      email,
+				Subject: "Kode Verifikasi Email",
+				Body:    otpCode,
+				Type:    "otp",
+			}
+			if err := s.rabbitMQ.PublishEmail(emailMsg); err != nil {
+				log.Printf("Failed to publish OTP email: %v\n", err)
+			} else {
+				log.Printf("OTP email queued successfully for %s", email)
+			}
 		} else {
-			log.Printf("OTP email queued successfully for %s", email)
+			log.Printf("Warning: RabbitMQ not available, OTP email not sent for %s", email)
 		}
-	} else {
-		log.Printf("Warning: RabbitMQ not available, OTP email not sent for %s", email)
-	}
+	}()
 
+	// Return immediately without waiting for email to be sent
 	return nil
 }
 
@@ -440,24 +450,28 @@ func (s *authService) RequestResetPassword(email string) error {
 		return fmt.Errorf("failed to update OTP: %w", err)
 	}
 
-	// Send OTP email via RabbitMQ
-	s.ensureRabbitMQ() // Try to reconnect if needed
-	if s.rabbitMQ != nil {
-		emailMsg := util.EmailMessage{
-			To:      email,
-			Subject: "Kode Reset Password",
-			Body:    otpCode,
-			Type:    "otp",
-		}
-		if err := s.rabbitMQ.PublishEmail(emailMsg); err != nil {
-			log.Printf("Failed to publish reset password OTP email: %v\n", err)
+	// Send OTP email via RabbitMQ asynchronously (non-blocking)
+	// Publish to queue immediately without waiting for confirmation
+	go func() {
+		s.ensureRabbitMQ() // Try to reconnect if needed
+		if s.rabbitMQ != nil {
+			emailMsg := util.EmailMessage{
+				To:      email,
+				Subject: "Kode Reset Password",
+				Body:    otpCode,
+				Type:    "otp",
+			}
+			if err := s.rabbitMQ.PublishEmail(emailMsg); err != nil {
+				log.Printf("Failed to publish reset password OTP email: %v\n", err)
+			} else {
+				log.Printf("Reset password OTP email queued successfully for %s", email)
+			}
 		} else {
-			log.Printf("Reset password OTP email queued successfully for %s", email)
+			log.Printf("Warning: RabbitMQ not available, reset password OTP email not sent for %s", email)
 		}
-	} else {
-		log.Printf("Warning: RabbitMQ not available, reset password OTP email not sent for %s", email)
-	}
+	}()
 
+	// Return immediately without waiting for email to be sent
 	return nil
 }
 
