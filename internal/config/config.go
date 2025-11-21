@@ -42,6 +42,7 @@ type Config struct {
 
 	// Email
 	EmailFrom    string
+	EmailName    string // Custom sender name (e.g., "BeRealTime")
 	SMTPHost     string
 	SMTPPort     string
 	SMTPUsername string
@@ -87,6 +88,7 @@ func Load() (*Config, error) {
 
 		// Email
 		EmailFrom:    getEnv("EMAIL_FROM", ""),
+		EmailName:    getEnv("EMAIL_NAME", "BeRealTime"),
 		SMTPHost:     getEnv("SMTP_HOST", "smtp.gmail.com"),
 		SMTPPort:     getEnv("SMTP_PORT", "587"),
 		SMTPUsername: getEnv("SMTP_USERNAME", ""),
@@ -119,4 +121,3 @@ func getEnv(key, defaultValue string) string {
 	}
 	return defaultValue
 }
-
