@@ -81,25 +81,27 @@ func (s *emailService) sendEmailHTML(to, subject, htmlBody, textBody string) err
 
 func (s *emailService) SendOTPEmail(to, otpCode string) error {
 	subject := "Kode Verifikasi OTP Anda"
+	year := time.Now().Year()
 
 	htmlBody := fmt.Sprintf(`
-<div style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f7fa;">
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="background-color: #f5f7fa;">
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f8;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="background-color: #f4f6f8; padding: 40px 20px;">
         <tr>
-            <td align="center" style="padding: 40px 20px;">
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width: 600px; width: 100%%; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);">
+            <td align="center">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width: 600px; width: 100%%; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 4px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);">
                     <!-- Header -->
                     <tr>
-                        <td align="center" style="padding: 40px 40px 30px; background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); border-radius: 12px 12px 0 0;">
-                            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                        <td style="background-color: #1e3a8a; padding: 30px 40px; border-bottom: 3px solid #1e40af;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%">
                                 <tr>
-                                    <td align="center" style="width: 64px; height: 64px; background-color: #ffffff; border-radius: 50%%; font-size: 32px; line-height: 64px;">
-                                        🔐
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td align="center" style="padding-top: 16px;">
-                                        <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">Kode Verifikasi</h1>
+                                    <td>
+                                        <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: 0.5px;">%s</h1>
                                     </td>
                                 </tr>
                             </table>
@@ -109,63 +111,91 @@ func (s *emailService) SendOTPEmail(to, otpCode string) error {
                     <!-- Content -->
                     <tr>
                         <td style="padding: 40px;">
-                            <p style="margin: 0 0 24px; color: #2d3748; font-size: 16px; line-height: 1.6;">
-                                Halo,
-                            </p>
-                            <p style="margin: 0 0 32px; color: #4a5568; font-size: 15px; line-height: 1.6;">
-                                Terima kasih telah mendaftar di <strong>%s</strong>. Gunakan kode OTP di bawah ini untuk memverifikasi akun Anda:
-                            </p>
-                            
-                            <!-- OTP Code Box -->
-                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="margin: 0 0 32px;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%">
                                 <tr>
-                                    <td align="center" style="background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); border-radius: 12px; padding: 32px;">
-                                        <div style="font-size: 13px; color: #ffffff; opacity: 0.9; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">
-                                            Kode Verifikasi Anda
-                                        </div>
-                                        <div style="font-size: 42px; font-weight: 700; color: #ffffff; letter-spacing: 8px; font-family: 'Courier New', monospace;">
-                                            %s
-                                        </div>
-                                    </td>
-                                </tr>
-                            </table>
-                            
-                            <!-- Warning Box -->
-                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="margin: 0 0 24px;">
-                                <tr>
-                                    <td style="background-color: #fef5e7; border-left: 4px solid #f39c12; padding: 16px 20px; border-radius: 6px;">
-                                        <p style="margin: 0; color: #7d6608; font-size: 14px; line-height: 1.5;">
-                                            <strong>⚠️ Penting:</strong> Kode ini hanya berlaku selama <strong>10 menit</strong>. Jangan bagikan kode ini kepada siapapun untuk keamanan akun Anda.
+                                    <td>
+                                        <p style="margin: 0 0 20px; color: #1f2937; font-size: 16px; line-height: 1.6; font-weight: 500;">
+                                            Yth. Pelanggan Terhormat,
+                                        </p>
+                                        <p style="margin: 0 0 24px; color: #374151; font-size: 15px; line-height: 1.7;">
+                                            Terima kasih telah menggunakan layanan kami. Berikut adalah kode verifikasi One-Time Password (OTP) untuk proses autentikasi akun Anda:
+                                        </p>
+                                        
+                                        <!-- OTP Code Box -->
+                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="margin: 0 0 32px;">
+                                            <tr>
+                                                <td style="background-color: #f8fafc; border: 2px solid #e5e7eb; border-radius: 6px; padding: 30px; text-align: center;">
+                                                    <p style="margin: 0 0 12px; color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">
+                                                        Kode Verifikasi OTP
+                                                    </p>
+                                                    <div style="font-size: 36px; font-weight: 700; color: #1e3a8a; letter-spacing: 6px; font-family: 'Courier New', 'Consolas', monospace; padding: 16px 0; background-color: #ffffff; border: 1px solid #d1d5db; border-radius: 4px;">
+                                                        %s
+                                                    </div>
+                                                    <p style="margin: 16px 0 0; color: #6b7280; font-size: 13px;">
+                                                        Berlaku selama <strong style="color: #dc2626;">10 menit</strong>
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        
+                                        <!-- Security Notice -->
+                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="margin: 0 0 24px;">
+                                            <tr>
+                                                <td style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px 20px; border-radius: 4px;">
+                                                    <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.6;">
+                                                        <strong style="color: #78350f;">PENTING - KEAMANAN:</strong><br>
+                                                        • Jangan pernah membagikan kode OTP ini kepada siapapun, termasuk pihak yang mengaku dari %s<br>
+                                                        • Kode OTP hanya digunakan untuk verifikasi akun Anda<br>
+                                                        • Jika Anda tidak melakukan permintaan ini, segera hubungi Customer Service kami
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        
+                                        <p style="margin: 0 0 8px; color: #374151; font-size: 15px; line-height: 1.7;">
+                                            Email ini dikirim secara otomatis oleh sistem keamanan kami. Mohon untuk tidak membalas email ini.
                                         </p>
                                     </td>
                                 </tr>
                             </table>
-                            
-                            <p style="margin: 0; color: #718096; font-size: 14px; line-height: 1.6;">
-                                Jika Anda tidak melakukan permintaan ini, silakan abaikan email ini atau hubungi tim support kami.
-                            </p>
                         </td>
                     </tr>
                     
                     <!-- Footer -->
                     <tr>
-                        <td style="padding: 30px 40px; background-color: #f8fafc; border-radius: 0 0 12px 12px; border-top: 1px solid #e2e8f0;">
-                            <p style="margin: 0 0 8px; color: #64748b; font-size: 13px; text-align: center; line-height: 1.5;">
-                                Salam hangat,<br>
-                                <strong>Tim %s</strong>
-                            </p>
-                            <p style="margin: 16px 0 0; color: #94a3b8; font-size: 12px; text-align: center; line-height: 1.5;">
-                                © %d %s. All rights reserved.<br>
-                                Email ini dikirim secara otomatis, mohon jangan membalas.
-                            </p>
+                        <td style="background-color: #f9fafb; border-top: 1px solid #e5e7eb; padding: 30px 40px;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%">
+                                <tr>
+                                    <td style="padding-bottom: 16px; border-bottom: 1px solid #e5e7eb;">
+                                        <p style="margin: 0 0 12px; color: #1f2937; font-size: 14px; line-height: 1.6;">
+                                            Hormat kami,<br>
+                                            <strong style="color: #1e3a8a;">Tim Layanan Pelanggan<br>%s</strong>
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding-top: 20px;">
+                                        <p style="margin: 0 0 8px; color: #6b7280; font-size: 12px; line-height: 1.6;">
+                                            <strong>Informasi Kontak:</strong><br>
+                                            Email: support@%s<br>
+                                            Jam Layanan: Senin - Jumat, 08:00 - 17:00 WIB
+                                        </p>
+                                        <p style="margin: 16px 0 0; color: #9ca3af; font-size: 11px; line-height: 1.6; border-top: 1px solid #e5e7eb; padding-top: 16px;">
+                                            © %d %s. Hak Cipta Dilindungi.<br>
+                                            Email ini bersifat rahasia dan ditujukan hanya untuk penerima yang dimaksud. Jika Anda menerima email ini secara tidak sengaja, mohon untuk menghapusnya dan tidak menyebarkannya.
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
                         </td>
                     </tr>
                 </table>
             </td>
         </tr>
     </table>
-</div>
-`, s.config.EmailName, otpCode, s.config.EmailName, time.Now().Year(), s.config.EmailName)
+</body>
+</html>
+`, s.config.EmailName, otpCode, s.config.EmailName, s.config.EmailName, s.config.EmailName, year, s.config.EmailName)
 
 	textBody := fmt.Sprintf(`
 Halo,
@@ -186,26 +216,27 @@ Tim %s
 }
 
 func (s *emailService) SendResetPasswordEmail(to, otpCode string) error {
-	subject := "Reset Password - Kode OTP"
+	subject := "Permintaan Reset Password - Kode OTP"
 
 	htmlBody := fmt.Sprintf(`
-<div style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f7fa;">
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="background-color: #f5f7fa;">
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f8;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="background-color: #f4f6f8; padding: 40px 20px;">
         <tr>
-            <td align="center" style="padding: 40px 20px;">
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width: 600px; width: 100%%; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);">
+            <td align="center">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width: 600px; width: 100%%; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 4px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);">
                     <!-- Header -->
                     <tr>
-                        <td align="center" style="padding: 40px 40px 30px; background: linear-gradient(135deg, #f093fb 0%%, #f5576c 100%%); border-radius: 12px 12px 0 0;">
-                            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                        <td style="background-color: #1e3a8a; padding: 30px 40px; border-bottom: 3px solid #1e40af;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%">
                                 <tr>
-                                    <td align="center" style="width: 64px; height: 64px; background-color: #ffffff; border-radius: 50%%; font-size: 32px; line-height: 64px;">
-                                        🔑
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td align="center" style="padding-top: 16px;">
-                                        <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">Reset Password</h1>
+                                    <td>
+                                        <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: 0.5px;">%s</h1>
                                     </td>
                                 </tr>
                             </table>
@@ -215,89 +246,119 @@ func (s *emailService) SendResetPasswordEmail(to, otpCode string) error {
                     <!-- Content -->
                     <tr>
                         <td style="padding: 40px;">
-                            <p style="margin: 0 0 24px; color: #2d3748; font-size: 16px; line-height: 1.6;">
-                                Halo,
-                            </p>
-                            <p style="margin: 0 0 32px; color: #4a5568; font-size: 15px; line-height: 1.6;">
-                                Kami menerima permintaan untuk mereset password akun <strong>%s</strong> Anda. Gunakan kode OTP di bawah ini untuk melanjutkan:
-                            </p>
-                            
-                            <!-- OTP Code Box -->
-                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="margin: 0 0 32px;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%">
                                 <tr>
-                                    <td align="center" style="background: linear-gradient(135deg, #f093fb 0%%, #f5576c 100%%); border-radius: 12px; padding: 32px;">
-                                        <div style="font-size: 13px; color: #ffffff; opacity: 0.9; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">
-                                            Kode Reset Password
-                                        </div>
-                                        <div style="font-size: 42px; font-weight: 700; color: #ffffff; letter-spacing: 8px; font-family: 'Courier New', monospace;">
-                                            %s
-                                        </div>
-                                    </td>
-                                </tr>
-                            </table>
-                            
-                            <!-- Steps Box -->
-                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="margin: 0 0 24px;">
-                                <tr>
-                                    <td style="background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 20px;">
-                                        <h3 style="margin: 0 0 12px; color: #0c4a6e; font-size: 15px; font-weight: 600;">Langkah Selanjutnya:</h3>
-                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                    <td>
+                                        <p style="margin: 0 0 20px; color: #1f2937; font-size: 16px; line-height: 1.6; font-weight: 500;">
+                                            Yth. Pelanggan Terhormat,
+                                        </p>
+                                        <p style="margin: 0 0 24px; color: #374151; font-size: 15px; line-height: 1.7;">
+                                            Kami menerima permintaan untuk mereset kata sandi akun <strong>%s</strong> Anda. Untuk melanjutkan proses reset password, gunakan kode OTP berikut:
+                                        </p>
+                                        
+                                        <!-- OTP Code Box -->
+                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="margin: 0 0 32px;">
                                             <tr>
-                                                <td style="color: #075985; font-size: 14px; line-height: 1.8; padding: 4px 0;">
-                                                    1. Masukkan kode OTP di atas
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td style="color: #075985; font-size: 14px; line-height: 1.8; padding: 4px 0;">
-                                                    2. Buat password baru yang kuat
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td style="color: #075985; font-size: 14px; line-height: 1.8; padding: 4px 0;">
-                                                    3. Login dengan password baru Anda
+                                                <td style="background-color: #f8fafc; border: 2px solid #e5e7eb; border-radius: 6px; padding: 30px; text-align: center;">
+                                                    <p style="margin: 0 0 12px; color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">
+                                                        Kode OTP Reset Password
+                                                    </p>
+                                                    <div style="font-size: 36px; font-weight: 700; color: #1e3a8a; letter-spacing: 6px; font-family: 'Courier New', 'Consolas', monospace; padding: 16px 0; background-color: #ffffff; border: 1px solid #d1d5db; border-radius: 4px;">
+                                                        %s
+                                                    </div>
+                                                    <p style="margin: 16px 0 0; color: #6b7280; font-size: 13px;">
+                                                        Berlaku selama <strong style="color: #dc2626;">10 menit</strong>
+                                                    </p>
                                                 </td>
                                             </tr>
                                         </table>
-                                    </td>
-                                </tr>
-                            </table>
-                            
-                            <!-- Warning Box -->
-                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="margin: 0 0 24px;">
-                                <tr>
-                                    <td style="background-color: #fef5e7; border-left: 4px solid #f39c12; padding: 16px 20px; border-radius: 6px;">
-                                        <p style="margin: 0; color: #7d6608; font-size: 14px; line-height: 1.5;">
-                                            <strong>⚠️ Penting:</strong> Kode ini hanya berlaku selama <strong>10 menit</strong>. Jangan bagikan kode ini kepada siapapun.
+                                        
+                                        <!-- Steps Box -->
+                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="margin: 0 0 24px;">
+                                            <tr>
+                                                <td style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 20px;">
+                                                    <p style="margin: 0 0 16px; color: #1e40af; font-size: 15px; font-weight: 600;">
+                                                        Langkah-langkah Reset Password:
+                                                    </p>
+                                                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%">
+                                                        <tr>
+                                                            <td style="padding: 8px 0; color: #1e3a8a; font-size: 14px; line-height: 1.8;">
+                                                                <strong>1.</strong> Masukkan kode OTP di atas pada halaman reset password
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="padding: 8px 0; color: #1e3a8a; font-size: 14px; line-height: 1.8;">
+                                                                <strong>2.</strong> Buat kata sandi baru yang kuat (minimal 8 karakter, kombinasi huruf, angka, dan simbol)
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="padding: 8px 0; color: #1e3a8a; font-size: 14px; line-height: 1.8;">
+                                                                <strong>3.</strong> Login kembali menggunakan kata sandi baru Anda
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        
+                                        <!-- Security Notice -->
+                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="margin: 0 0 24px;">
+                                            <tr>
+                                                <td style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px 20px; border-radius: 4px;">
+                                                    <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.6;">
+                                                        <strong style="color: #78350f;">PERINGATAN KEAMANAN:</strong><br>
+                                                        • Jika Anda TIDAK melakukan permintaan reset password ini, segera hubungi Customer Service kami<br>
+                                                        • Jangan pernah membagikan kode OTP kepada siapapun<br>
+                                                        • Pastikan Anda menggunakan koneksi internet yang aman saat melakukan reset password
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        
+                                        <p style="margin: 0; color: #374151; font-size: 15px; line-height: 1.7;">
+                                            Email ini dikirim secara otomatis oleh sistem keamanan kami. Mohon untuk tidak membalas email ini.
                                         </p>
                                     </td>
                                 </tr>
                             </table>
-                            
-                            <p style="margin: 0; color: #718096; font-size: 14px; line-height: 1.6;">
-                                Jika Anda tidak melakukan permintaan ini, akun Anda tetap aman. Silakan abaikan email ini.
-                            </p>
                         </td>
                     </tr>
                     
                     <!-- Footer -->
                     <tr>
-                        <td style="padding: 30px 40px; background-color: #f8fafc; border-radius: 0 0 12px 12px; border-top: 1px solid #e2e8f0;">
-                            <p style="margin: 0 0 8px; color: #64748b; font-size: 13px; text-align: center; line-height: 1.5;">
-                                Salam hangat,<br>
-                                <strong>Tim %s</strong>
-                            </p>
-                            <p style="margin: 16px 0 0; color: #94a3b8; font-size: 12px; text-align: center; line-height: 1.5;">
-                                © %d %s. All rights reserved.<br>
-                                Email ini dikirim secara otomatis, mohon jangan membalas.
-                            </p>
+                        <td style="background-color: #f9fafb; border-top: 1px solid #e5e7eb; padding: 30px 40px;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%">
+                                <tr>
+                                    <td style="padding-bottom: 16px; border-bottom: 1px solid #e5e7eb;">
+                                        <p style="margin: 0 0 12px; color: #1f2937; font-size: 14px; line-height: 1.6;">
+                                            Hormat kami,<br>
+                                            <strong style="color: #1e3a8a;">Tim Layanan Pelanggan<br>%s</strong>
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding-top: 20px;">
+                                        <p style="margin: 0 0 8px; color: #6b7280; font-size: 12px; line-height: 1.6;">
+                                            <strong>Informasi Kontak:</strong><br>
+                                            Email: support@%s<br>
+                                            Jam Layanan: Senin - Jumat, 08:00 - 17:00 WIB
+                                        </p>
+                                        <p style="margin: 16px 0 0; color: #9ca3af; font-size: 11px; line-height: 1.6; border-top: 1px solid #e5e7eb; padding-top: 16px;">
+                                            © %d %s. Hak Cipta Dilindungi.<br>
+                                            Email ini bersifat rahasia dan ditujukan hanya untuk penerima yang dimaksud. Jika Anda menerima email ini secara tidak sengaja, mohon untuk menghapusnya dan tidak menyebarkannya.
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
                         </td>
                     </tr>
                 </table>
             </td>
         </tr>
     </table>
-</div>
-`, s.config.EmailName, otpCode, s.config.EmailName, time.Now().Year(), s.config.EmailName)
+</body>
+</html>
+`, s.config.EmailName, s.config.EmailName, otpCode, s.config.EmailName, s.config.EmailName, time.Now().Year(), s.config.EmailName)
 
 	textBody := fmt.Sprintf(`
 Halo,
@@ -323,27 +384,28 @@ Tim %s
 }
 
 func (s *emailService) SendVerificationEmail(to, token string) error {
-	subject := "Verifikasi Email Anda"
+	subject := "Verifikasi Alamat Email Anda"
 	verificationURL := fmt.Sprintf("%s/auth/verify-email?token=%s", s.config.ClientURL, token)
 
 	htmlBody := fmt.Sprintf(`
-<div style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f7fa;">
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="background-color: #f5f7fa;">
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f8;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="background-color: #f4f6f8; padding: 40px 20px;">
         <tr>
-            <td align="center" style="padding: 40px 20px;">
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width: 600px; width: 100%%; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);">
+            <td align="center">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width: 600px; width: 100%%; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 4px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);">
                     <!-- Header -->
                     <tr>
-                        <td align="center" style="padding: 40px 40px 30px; background: linear-gradient(135deg, #4facfe 0%%, #00f2fe 100%%); border-radius: 12px 12px 0 0;">
-                            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                        <td style="background-color: #1e3a8a; padding: 30px 40px; border-bottom: 3px solid #1e40af;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%">
                                 <tr>
-                                    <td align="center" style="width: 64px; height: 64px; background-color: #ffffff; border-radius: 50%%; font-size: 32px; line-height: 64px;">
-                                        ✉️
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td align="center" style="padding-top: 16px;">
-                                        <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">Verifikasi Email</h1>
+                                    <td>
+                                        <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: 0.5px;">%s</h1>
                                     </td>
                                 </tr>
                             </table>
@@ -353,74 +415,96 @@ func (s *emailService) SendVerificationEmail(to, token string) error {
                     <!-- Content -->
                     <tr>
                         <td style="padding: 40px;">
-                            <p style="margin: 0 0 24px; color: #2d3748; font-size: 16px; line-height: 1.6;">
-                                Halo,
-                            </p>
-                            <p style="margin: 0 0 32px; color: #4a5568; font-size: 15px; line-height: 1.6;">
-                                Terima kasih telah mendaftar di <strong>%s</strong>! Untuk mengaktifkan akun Anda, silakan verifikasi alamat email dengan mengklik tombol di bawah ini:
-                            </p>
-                            
-                            <!-- CTA Button -->
-                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="margin: 0 0 32px;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%">
                                 <tr>
-                                    <td align="center">
-                                        <a href="%s" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #4facfe 0%%, #00f2fe 100%%); color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; letter-spacing: 0.5px;">
-                                            ✓ Verifikasi Email Saya
-                                        </a>
+                                    <td>
+                                        <p style="margin: 0 0 20px; color: #1f2937; font-size: 16px; line-height: 1.6; font-weight: 500;">
+                                            Yth. Pelanggan Terhormat,
+                                        </p>
+                                        <p style="margin: 0 0 24px; color: #374151; font-size: 15px; line-height: 1.7;">
+                                            Terima kasih telah melakukan pendaftaran di <strong>%s</strong>. Untuk mengaktifkan akun Anda, silakan verifikasi alamat email dengan mengklik tombol di bawah ini:
+                                        </p>
+                                        
+                                        <!-- CTA Button -->
+                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="margin: 0 0 32px;">
+                                            <tr>
+                                                <td align="center">
+                                                    <a href="%s" style="display: inline-block; padding: 14px 36px; background-color: #1e3a8a; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: 600; font-size: 15px; letter-spacing: 0.3px; border: 2px solid #1e3a8a;">
+                                                        Verifikasi Email Saya
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        
+                                        <!-- Alternative Link -->
+                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="margin: 0 0 24px;">
+                                            <tr>
+                                                <td style="background-color: #f8fafc; border: 1px solid #e5e7eb; border-radius: 6px; padding: 20px;">
+                                                    <p style="margin: 0 0 12px; color: #6b7280; font-size: 13px; font-weight: 600;">
+                                                        Atau salin dan tempel link berikut ke browser Anda:
+                                                    </p>
+                                                    <p style="margin: 0; color: #1e40af; font-size: 13px; word-break: break-all; line-height: 1.6; font-family: 'Courier New', monospace;">
+                                                        %s
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        
+                                        <!-- Warning Box -->
+                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="margin: 0 0 24px;">
+                                            <tr>
+                                                <td style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px 20px; border-radius: 4px;">
+                                                    <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.6;">
+                                                        <strong style="color: #78350f;">PENTING:</strong> Link verifikasi ini berlaku selama <strong>24 jam</strong>. Setelah waktu tersebut, Anda perlu meminta link verifikasi baru melalui halaman login.
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        
+                                        <p style="margin: 0; color: #374151; font-size: 15px; line-height: 1.7;">
+                                            Jika Anda tidak melakukan pendaftaran untuk akun ini, silakan abaikan email ini. Akun tidak akan diaktifkan tanpa verifikasi email.
+                                        </p>
                                     </td>
                                 </tr>
                             </table>
-                            
-                            <!-- Alternative Link -->
-                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="margin: 0 0 24px;">
-                                <tr>
-                                    <td style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px;">
-                                        <p style="margin: 0 0 12px; color: #475569; font-size: 13px; font-weight: 600;">
-                                            Atau salin link berikut ke browser Anda:
-                                        </p>
-                                        <p style="margin: 0; color: #3b82f6; font-size: 13px; word-break: break-all; line-height: 1.5;">
-                                            %s
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-                            
-                            <!-- Warning Box -->
-                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="margin: 0 0 24px;">
-                                <tr>
-                                    <td style="background-color: #fef5e7; border-left: 4px solid #f39c12; padding: 16px 20px; border-radius: 6px;">
-                                        <p style="margin: 0; color: #7d6608; font-size: 14px; line-height: 1.5;">
-                                            <strong>⚠️ Perhatian:</strong> Link verifikasi ini berlaku selama <strong>24 jam</strong>. Setelah itu, Anda perlu meminta link verifikasi baru.
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-                            
-                            <p style="margin: 0; color: #718096; font-size: 14px; line-height: 1.6;">
-                                Jika Anda tidak mendaftar untuk akun ini, silakan abaikan email ini.
-                            </p>
                         </td>
                     </tr>
                     
                     <!-- Footer -->
                     <tr>
-                        <td style="padding: 30px 40px; background-color: #f8fafc; border-radius: 0 0 12px 12px; border-top: 1px solid #e2e8f0;">
-                            <p style="margin: 0 0 8px; color: #64748b; font-size: 13px; text-align: center; line-height: 1.5;">
-                                Salam hangat,<br>
-                                <strong>Tim %s</strong>
-                            </p>
-                            <p style="margin: 16px 0 0; color: #94a3b8; font-size: 12px; text-align: center; line-height: 1.5;">
-                                © %d %s. All rights reserved.<br>
-                                Email ini dikirim secara otomatis, mohon jangan membalas.
-                            </p>
+                        <td style="background-color: #f9fafb; border-top: 1px solid #e5e7eb; padding: 30px 40px;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%">
+                                <tr>
+                                    <td style="padding-bottom: 16px; border-bottom: 1px solid #e5e7eb;">
+                                        <p style="margin: 0 0 12px; color: #1f2937; font-size: 14px; line-height: 1.6;">
+                                            Hormat kami,<br>
+                                            <strong style="color: #1e3a8a;">Tim Layanan Pelanggan<br>%s</strong>
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding-top: 20px;">
+                                        <p style="margin: 0 0 8px; color: #6b7280; font-size: 12px; line-height: 1.6;">
+                                            <strong>Informasi Kontak:</strong><br>
+                                            Email: support@%s<br>
+                                            Jam Layanan: Senin - Jumat, 08:00 - 17:00 WIB
+                                        </p>
+                                        <p style="margin: 16px 0 0; color: #9ca3af; font-size: 11px; line-height: 1.6; border-top: 1px solid #e5e7eb; padding-top: 16px;">
+                                            © %d %s. Hak Cipta Dilindungi.<br>
+                                            Email ini bersifat rahasia dan ditujukan hanya untuk penerima yang dimaksud. Jika Anda menerima email ini secara tidak sengaja, mohon untuk menghapusnya dan tidak menyebarkannya.
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
                         </td>
                     </tr>
                 </table>
             </td>
         </tr>
     </table>
-</div>
-`, s.config.EmailName, verificationURL, verificationURL, s.config.EmailName, time.Now().Year(), s.config.EmailName)
+</body>
+</html>
+`, s.config.EmailName, s.config.EmailName, verificationURL, verificationURL, s.config.EmailName, s.config.EmailName, time.Now().Year(), s.config.EmailName)
 
 	textBody := fmt.Sprintf(`
 Halo,
@@ -445,23 +529,24 @@ func (s *emailService) SendWelcomeEmail(to, name string) error {
 	subject := "Selamat Datang di " + s.config.EmailName
 
 	htmlBody := fmt.Sprintf(`
-<div style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f7fa;">
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="background-color: #f5f7fa;">
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f8;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="background-color: #f4f6f8; padding: 40px 20px;">
         <tr>
-            <td align="center" style="padding: 40px 20px;">
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width: 600px; width: 100%%; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);">
+            <td align="center">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width: 600px; width: 100%%; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 4px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);">
                     <!-- Header -->
                     <tr>
-                        <td align="center" style="padding: 40px 40px 30px; background: linear-gradient(135deg, #a8edea 0%%, #fed6e3 100%%); border-radius: 12px 12px 0 0;">
-                            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                        <td style="background-color: #1e3a8a; padding: 30px 40px; border-bottom: 3px solid #1e40af;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%">
                                 <tr>
-                                    <td align="center" style="width: 64px; height: 64px; background-color: #ffffff; border-radius: 50%%; font-size: 32px; line-height: 64px;">
-                                        🎉
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td align="center" style="padding-top: 16px;">
-                                        <h1 style="margin: 0; color: #1a202c; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">Selamat Datang!</h1>
+                                    <td>
+                                        <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: 0.5px;">%s</h1>
                                     </td>
                                 </tr>
                             </table>
@@ -471,86 +556,126 @@ func (s *emailService) SendWelcomeEmail(to, name string) error {
                     <!-- Content -->
                     <tr>
                         <td style="padding: 40px;">
-                            <p style="margin: 0 0 24px; color: #2d3748; font-size: 16px; line-height: 1.6;">
-                                Halo <strong>%s</strong>,
-                            </p>
-                            <p style="margin: 0 0 32px; color: #4a5568; font-size: 15px; line-height: 1.6;">
-                                Terima kasih telah bergabung dengan <strong>%s</strong>! Kami sangat senang menyambut Anda sebagai bagian dari komunitas kami.
-                            </p>
-                            
-                            <!-- Features Box -->
-                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="margin: 0 0 32px;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%">
                                 <tr>
-                                    <td style="background: linear-gradient(135deg, #f6f8fb 0%%, #f1f4f9 100%%); border: 1px solid #e2e8f0; border-radius: 12px; padding: 28px;">
-                                        <h3 style="margin: 0 0 16px; color: #1e293b; font-size: 17px; font-weight: 600;">Apa yang bisa Anda lakukan:</h3>
+                                    <td>
+                                        <p style="margin: 0 0 20px; color: #1f2937; font-size: 16px; line-height: 1.6; font-weight: 500;">
+                                            Yth. %s,
+                                        </p>
+                                        <p style="margin: 0 0 24px; color: #374151; font-size: 15px; line-height: 1.7;">
+                                            Selamat datang di <strong>%s</strong>! Kami sangat senang Anda telah bergabung dengan kami. Akun Anda telah berhasil dibuat dan siap digunakan.
+                                        </p>
                                         
-                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width: 100%%;">
+                                        <!-- Features Box -->
+                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="margin: 0 0 32px;">
                                             <tr>
-                                                <td style="padding: 8px 0;">
-                                                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                                <td style="background-color: #f8fafc; border: 1px solid #e5e7eb; border-radius: 6px; padding: 24px;">
+                                                    <p style="margin: 0 0 16px; color: #1e3a8a; font-size: 16px; font-weight: 600;">
+                                                        Layanan yang Tersedia untuk Anda:
+                                                    </p>
+                                                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%">
                                                         <tr>
-                                                            <td style="padding-right: 12px; font-size: 20px; vertical-align: top;">✨</td>
-                                                            <td style="color: #475569; font-size: 14px; line-height: 1.6;">
-                                                                <strong>Nikmati semua fitur</strong> yang tersedia untuk pengalaman terbaik
+                                                            <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb;">
+                                                                <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                                                    <tr>
+                                                                        <td style="padding-right: 12px; vertical-align: top; width: 24px;">
+                                                                            <span style="color: #1e3a8a; font-size: 18px;">✓</span>
+                                                                        </td>
+                                                                        <td style="color: #374151; font-size: 14px; line-height: 1.7;">
+                                                                            <strong>Akses penuh</strong> ke semua fitur dan layanan platform
+                                                                        </td>
+                                                                    </tr>
+                                                                </table>
                                                             </td>
                                                         </tr>
-                                                    </table>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding: 8px 0;">
-                                                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                                                         <tr>
-                                                            <td style="padding-right: 12px; font-size: 20px; vertical-align: top;">🚀</td>
-                                                            <td style="color: #475569; font-size: 14px; line-height: 1.6;">
-                                                                <strong>Jelajahi pengalaman</strong> yang menyenangkan dan bermanfaat
+                                                            <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb;">
+                                                                <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                                                    <tr>
+                                                                        <td style="padding-right: 12px; vertical-align: top; width: 24px;">
+                                                                            <span style="color: #1e3a8a; font-size: 18px;">✓</span>
+                                                                        </td>
+                                                                        <td style="color: #374151; font-size: 14px; line-height: 1.7;">
+                                                                            <strong>Keamanan data</strong> terjamin dengan enkripsi tingkat tinggi
+                                                                        </td>
+                                                                    </tr>
+                                                                </table>
                                                             </td>
                                                         </tr>
-                                                    </table>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding: 8px 0;">
-                                                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                                                         <tr>
-                                                            <td style="padding-right: 12px; font-size: 20px; vertical-align: top;">💬</td>
-                                                            <td style="color: #475569; font-size: 14px; line-height: 1.6;">
-                                                                <strong>Hubungi tim support</strong> kapan saja jika ada pertanyaan
+                                                            <td style="padding: 10px 0;">
+                                                                <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                                                    <tr>
+                                                                        <td style="padding-right: 12px; vertical-align: top; width: 24px;">
+                                                                            <span style="color: #1e3a8a; font-size: 18px;">✓</span>
+                                                                        </td>
+                                                                        <td style="color: #374151; font-size: 14px; line-height: 1.7;">
+                                                                            <strong>Dukungan pelanggan</strong> siap membantu Anda kapan saja
+                                                                        </td>
+                                                                    </tr>
+                                                                </table>
                                                             </td>
                                                         </tr>
                                                     </table>
                                                 </td>
                                             </tr>
                                         </table>
+                                        
+                                        <!-- Info Box -->
+                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="margin: 0 0 24px;">
+                                            <tr>
+                                                <td style="background-color: #eff6ff; border-left: 4px solid #1e40af; padding: 16px 20px; border-radius: 4px;">
+                                                    <p style="margin: 0; color: #1e40af; font-size: 14px; line-height: 1.6;">
+                                                        <strong>Tips Keamanan:</strong> Pastikan Anda menggunakan kata sandi yang kuat dan tidak membagikan informasi akun kepada siapapun. Aktifkan autentikasi dua faktor jika tersedia untuk keamanan ekstra.
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        
+                                        <p style="margin: 0; color: #374151; font-size: 15px; line-height: 1.7;">
+                                            Jika Anda memiliki pertanyaan atau memerlukan bantuan, jangan ragu untuk menghubungi tim layanan pelanggan kami. Kami selalu siap membantu Anda.
+                                        </p>
                                     </td>
                                 </tr>
                             </table>
-                            
-                            <p style="margin: 0; color: #4a5568; font-size: 15px; line-height: 1.6;">
-                                Jika Anda memiliki pertanyaan atau memerlukan bantuan, jangan ragu untuk menghubungi tim dukungan kami. Kami selalu siap membantu!
-                            </p>
                         </td>
                     </tr>
                     
                     <!-- Footer -->
                     <tr>
-                        <td style="padding: 30px 40px; background-color: #f8fafc; border-radius: 0 0 12px 12px; border-top: 1px solid #e2e8f0;">
-                            <p style="margin: 0 0 8px; color: #64748b; font-size: 13px; text-align: center; line-height: 1.5;">
-                                Hormat kami,<br>
-                                <strong>Tim %s</strong>
-                            </p>
-                            <p style="margin: 16px 0 0; color: #94a3b8; font-size: 12px; text-align: center; line-height: 1.5;">
-                                © %d %s. All rights reserved.<br>
-                                Email ini dikirim secara otomatis, mohon jangan membalas.
-                            </p>
+                        <td style="background-color: #f9fafb; border-top: 1px solid #e5e7eb; padding: 30px 40px;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%">
+                                <tr>
+                                    <td style="padding-bottom: 16px; border-bottom: 1px solid #e5e7eb;">
+                                        <p style="margin: 0 0 12px; color: #1f2937; font-size: 14px; line-height: 1.6;">
+                                            Hormat kami,<br>
+                                            <strong style="color: #1e3a8a;">Tim Layanan Pelanggan<br>%s</strong>
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding-top: 20px;">
+                                        <p style="margin: 0 0 8px; color: #6b7280; font-size: 12px; line-height: 1.6;">
+                                            <strong>Informasi Kontak:</strong><br>
+                                            Email: support@%s<br>
+                                            Jam Layanan: Senin - Jumat, 08:00 - 17:00 WIB
+                                        </p>
+                                        <p style="margin: 16px 0 0; color: #9ca3af; font-size: 11px; line-height: 1.6; border-top: 1px solid #e5e7eb; padding-top: 16px;">
+                                            © %d %s. Hak Cipta Dilindungi.<br>
+                                            Email ini bersifat rahasia dan ditujukan hanya untuk penerima yang dimaksud. Jika Anda menerima email ini secara tidak sengaja, mohon untuk menghapusnya dan tidak menyebarkannya.
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
                         </td>
                     </tr>
                 </table>
             </td>
         </tr>
     </table>
-</div>
-`, name, s.config.EmailName, s.config.EmailName, time.Now().Year(), s.config.EmailName)
+</body>
+</html>
+`, s.config.EmailName, name, s.config.EmailName, s.config.EmailName, s.config.EmailName, time.Now().Year(), s.config.EmailName)
 
 	textBody := fmt.Sprintf(`
 Halo %s,

@@ -1,6 +1,6 @@
-# BeRealTime Go Backend
+# Zacode Go Backend
 
-Backend server untuk aplikasi BeRealTime menggunakan Go dengan arsitektur clean architecture.
+Backend server untuk aplikasi Zacode menggunakan Go dengan arsitektur clean architecture.
 
 ## Struktur Proyek
 
@@ -108,7 +108,7 @@ Reusable logger library yang bisa digunakan di seluruh aplikasi.
 1. Clone repository
 ```bash
 git clone <repository-url>
-cd berealtime/go
+cd /go
 ```
 
 2. Copy environment file
@@ -187,7 +187,7 @@ go test ./...
 
 ### Build Image
 ```bash
-docker build -t berealtime-go .
+docker build -t 
 ```
 
 ### Run with Docker Compose
