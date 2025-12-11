@@ -39,8 +39,13 @@ services:
       - EMAIL_FROM=${EMAIL_FROM:-gamingafriza005@gmail.com}
       - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
       - SMTP_PORT=${SMTP_PORT:-587}
+      - EMAIL_NAME=${EMAIL_NAME:-Zacode}
       - SMTP_USERNAME=${SMTP_USERNAME:-gamingafriza005@gmail.com}
       - SMTP_PASSWORD=${SMTP_PASSWORD:-prcypthkwnplsuzv}
+      # Rate Limiting
+      - RATE_LIMIT_ENABLED=${RATE_LIMIT_ENABLED:-true}
+      - RATE_LIMIT_RPS=${RATE_LIMIT_RPS:-100}
+      - RATE_LIMIT_BURST=${RATE_LIMIT_BURST:-200}
     depends_on:
       db:
         condition: service_healthy

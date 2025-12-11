@@ -4,6 +4,7 @@ import (
 	"log"
 	"time"
 	"yourapp/internal/config"
+	"yourapp/internal/middleware"
 	"yourapp/internal/model"
 	"yourapp/internal/repository"
 	"yourapp/internal/service"
@@ -26,6 +27,13 @@ func NewRouter(cfg *config.Config) *gin.Engine {
 
 	// CORS middleware
 	r.Use(corsMiddleware(cfg.ClientURL))
+
+	// Rate limiting middleware (if enabled)
+	if cfg.RateLimitEnabled {
+		rateLimiter := middleware.NewRateLimiter(cfg.RateLimitRPS, cfg.RateLimitBurst)
+		r.Use(rateLimiter.Middleware())
+		log.Printf("Rate limiting enabled: %d req/sec, burst: %d", cfg.RateLimitRPS, cfg.RateLimitBurst)
+	}
 
 	// Initialize database
 	db, err := initDB(cfg)

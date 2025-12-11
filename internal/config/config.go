@@ -47,6 +47,11 @@ type Config struct {
 	SMTPPort     string
 	SMTPUsername string
 	SMTPPassword string
+
+	// Rate Limiting
+	RateLimitEnabled bool
+	RateLimitRPS     int // Requests per second
+	RateLimitBurst   int // Burst size
 }
 
 func Load() (*Config, error) {
@@ -93,6 +98,11 @@ func Load() (*Config, error) {
 		SMTPPort:     getEnv("SMTP_PORT", "587"),
 		SMTPUsername: getEnv("SMTP_USERNAME", ""),
 		SMTPPassword: getEnv("SMTP_PASSWORD", ""),
+
+		// Rate Limiting (default: enabled, 100 req/sec, burst 200)
+		RateLimitEnabled: getEnvBool("RATE_LIMIT_ENABLED", true),
+		RateLimitRPS:     getEnvInt("RATE_LIMIT_RPS", 100),
+		RateLimitBurst:   getEnvInt("RATE_LIMIT_BURST", 200),
 	}
 
 	// Build database URL if not provided
@@ -118,6 +128,26 @@ func Load() (*Config, error) {
 func getEnv(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
+	}
+	return defaultValue
+}
+
+func getEnvBool(key string, defaultValue bool) bool {
+	if value := os.Getenv(key); value != "" {
+		if value == "true" || value == "1" || value == "yes" {
+			return true
+		}
+		return false
+	}
+	return defaultValue
+}
+
+func getEnvInt(key string, defaultValue int) int {
+	if value := os.Getenv(key); value != "" {
+		var intValue int
+		if _, err := fmt.Sscanf(value, "%d", &intValue); err == nil {
+			return intValue
+		}
 	}
 	return defaultValue
 }

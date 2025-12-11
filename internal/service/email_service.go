@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"net/smtp"
+	"strings"
 	"time"
 
 	"yourapp/internal/config"
@@ -58,11 +59,11 @@ func (s *emailService) sendEmailHTML(to, subject, htmlBody, textBody string) err
 		fromHeader, to, subject, boundary)
 
 	// Plain text part
-	textPart := fmt.Sprintf("--%s\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n%s\r\n",
+	textPart := fmt.Sprintf("--%s\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit\r\n\r\n%s\r\n",
 		boundary, textBody)
 
-	// HTML part
-	htmlPart := fmt.Sprintf("--%s\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n%s\r\n",
+	// HTML part - use 8bit encoding (UTF-8 compatible)
+	htmlPart := fmt.Sprintf("--%s\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit\r\n\r\n%s\r\n",
 		boundary, htmlBody)
 
 	// End boundary
@@ -80,113 +81,80 @@ func (s *emailService) sendEmailHTML(to, subject, htmlBody, textBody string) err
 }
 
 func (s *emailService) SendOTPEmail(to, otpCode string) error {
-	subject := "Kode Verifikasi OTP Anda"
-	year := time.Now().Year()
+	subject := "Email Verification - Kode OTP Anda"
+	emailName := s.config.EmailName
+	if emailName == "" {
+		emailName = "Zacode"
+	}
+	supportEmail := fmt.Sprintf("support@%s", s.config.EmailName)
+	if s.config.EmailFrom != "" {
+		// Extract domain from email if available
+		if idx := strings.Index(s.config.EmailFrom, "@"); idx != -1 {
+			supportEmail = fmt.Sprintf("support@%s", s.config.EmailFrom[idx+1:])
+		}
+	}
 
 	htmlBody := fmt.Sprintf(`
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f8;">
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="background-color: #f4f6f8; padding: 40px 20px;">
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; line-height: 1.6; background-color: #f4f4f4;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="background-color: #f4f4f4; padding: 20px;">
         <tr>
             <td align="center">
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width: 600px; width: 100%%; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 4px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width: 600px; width: 100%%; background-color: #ffffff; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                     <!-- Header -->
                     <tr>
-                        <td style="background-color: #1e3a8a; padding: 30px 40px; border-bottom: 3px solid #1e40af;">
-                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%">
-                                <tr>
-                                    <td>
-                                        <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: 0.5px;">%s</h1>
-                                    </td>
-                                </tr>
-                            </table>
+                        <td style="padding: 40px 40px 30px 40px; text-align: center;">
+                            <h1 style="color: #333333; margin: 0; font-size: 24px; font-weight: bold;">Welcome to %s!</h1>
                         </td>
                     </tr>
                     
                     <!-- Content -->
                     <tr>
-                        <td style="padding: 40px;">
+                        <td style="padding: 0 40px 30px 40px;">
+                            <p style="margin: 0 0 15px 0; color: #333333; font-size: 16px;">Hello,</p>
+                            <p style="margin: 0 0 15px 0; color: #333333; font-size: 16px;">Thank you for signing up with %s! We're thrilled to have you on board.</p>
+                            <p style="margin: 0 0 25px 0; color: #333333; font-size: 16px;">To ensure the security of your account and access all the features, please use the following OTP to verify your email address:</p>
+                            
+                            <!-- OTP Box -->
                             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%">
                                 <tr>
-                                    <td>
-                                        <p style="margin: 0 0 20px; color: #1f2937; font-size: 16px; line-height: 1.6; font-weight: 500;">
-                                            Yth. Pelanggan Terhormat,
-                                        </p>
-                                        <p style="margin: 0 0 24px; color: #374151; font-size: 15px; line-height: 1.7;">
-                                            Terima kasih telah menggunakan layanan kami. Berikut adalah kode verifikasi One-Time Password (OTP) untuk proses autentikasi akun Anda:
-                                        </p>
-                                        
-                                        <!-- OTP Code Box -->
-                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="margin: 0 0 32px;">
+                                    <td align="center" style="padding: 25px 0;">
+                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background-color: #f8f9fa; border-radius: 5px; padding: 20px;">
                                             <tr>
-                                                <td style="background-color: #f8fafc; border: 2px solid #e5e7eb; border-radius: 6px; padding: 30px; text-align: center;">
-                                                    <p style="margin: 0 0 12px; color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">
-                                                        Kode Verifikasi OTP
-                                                    </p>
-                                                    <div style="font-size: 36px; font-weight: 700; color: #1e3a8a; letter-spacing: 6px; font-family: 'Courier New', 'Consolas', monospace; padding: 16px 0; background-color: #ffffff; border: 1px solid #d1d5db; border-radius: 4px;">
-                                                        %s
-                                                    </div>
-                                                    <p style="margin: 16px 0 0; color: #6b7280; font-size: 13px;">
-                                                        Berlaku selama <strong style="color: #dc2626;">10 menit</strong>
-                                                    </p>
+                                                <td align="center" style="font-size: 24px; font-weight: bold; letter-spacing: 5px; color: #007bff; font-family: Arial, sans-serif;">
+                                                    %s
                                                 </td>
                                             </tr>
                                         </table>
-                                        
-                                        <!-- Security Notice -->
-                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%" style="margin: 0 0 24px;">
-                                            <tr>
-                                                <td style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px 20px; border-radius: 4px;">
-                                                    <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.6;">
-                                                        <strong style="color: #78350f;">PENTING - KEAMANAN:</strong><br>
-                                                        • Jangan pernah membagikan kode OTP ini kepada siapapun, termasuk pihak yang mengaku dari %s<br>
-                                                        • Kode OTP hanya digunakan untuk verifikasi akun Anda<br>
-                                                        • Jika Anda tidak melakukan permintaan ini, segera hubungi Customer Service kami
-                                                    </p>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                        
-                                        <p style="margin: 0 0 8px; color: #374151; font-size: 15px; line-height: 1.7;">
-                                            Email ini dikirim secara otomatis oleh sistem keamanan kami. Mohon untuk tidak membalas email ini.
-                                        </p>
                                     </td>
                                 </tr>
                             </table>
+                            
+                            <p style="margin: 25px 0 15px 0; color: #333333; font-size: 16px;">Once your email is verified, you'll be ready to dive into %s's exciting features.</p>
+                            <p style="margin: 0 0 15px 0; color: #333333; font-size: 16px;">If you did not register with us, please ignore this email or contact our support team at <a href="mailto:%s" style="color: #007bff; text-decoration: none;">%s</a>.</p>
                         </td>
                     </tr>
                     
                     <!-- Footer -->
                     <tr>
-                        <td style="background-color: #f9fafb; border-top: 1px solid #e5e7eb; padding: 30px 40px;">
-                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%%">
-                                <tr>
-                                    <td style="padding-bottom: 16px; border-bottom: 1px solid #e5e7eb;">
-                                        <p style="margin: 0 0 12px; color: #1f2937; font-size: 14px; line-height: 1.6;">
-                                            Hormat kami,<br>
-                                            <strong style="color: #1e3a8a;">Tim Layanan Pelanggan<br>%s</strong>
-                                        </p>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding-top: 20px;">
-                                        <p style="margin: 0 0 8px; color: #6b7280; font-size: 12px; line-height: 1.6;">
-                                            <strong>Informasi Kontak:</strong><br>
-                                            Email: support@%s<br>
-                                            Jam Layanan: Senin - Jumat, 08:00 - 17:00 WIB
-                                        </p>
-                                        <p style="margin: 16px 0 0; color: #9ca3af; font-size: 11px; line-height: 1.6; border-top: 1px solid #e5e7eb; padding-top: 16px;">
-                                            © %d %s. Hak Cipta Dilindungi.<br>
-                                            Email ini bersifat rahasia dan ditujukan hanya untuk penerima yang dimaksud. Jika Anda menerima email ini secara tidak sengaja, mohon untuk menghapusnya dan tidak menyebarkannya.
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
+                        <td style="padding: 30px 40px; border-top: 1px solid #eeeeee; text-align: center;">
+                            <p style="margin: 0 0 10px 0; color: #333333; font-size: 16px;">Thank you for choosing %s!</p>
+                            <p style="margin: 0; color: #666666; font-size: 16px;">Best regards,<br>%s Team</p>
+                        </td>
+                    </tr>
+                </table>
+                
+                <!-- Disclaimer -->
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width: 600px; width: 100%%;">
+                    <tr>
+                        <td align="center" style="padding: 20px 0 0 0; color: #999999; font-size: 12px;">
+                            <p style="margin: 0;">This is an automated message, please do not reply to this email.</p>
                         </td>
                     </tr>
                 </table>
@@ -195,22 +163,29 @@ func (s *emailService) SendOTPEmail(to, otpCode string) error {
     </table>
 </body>
 </html>
-`, s.config.EmailName, otpCode, s.config.EmailName, s.config.EmailName, s.config.EmailName, year, s.config.EmailName)
+`, emailName, emailName, otpCode, emailName, supportEmail, supportEmail, emailName, emailName)
 
 	textBody := fmt.Sprintf(`
-Halo,
+Hello,
 
-Terima kasih telah mendaftar di %s!
+Thank you for signing up with %s! We're thrilled to have you on board.
 
-Kode OTP Anda: %s
+To ensure the security of your account and access all the features, please use the following OTP to verify your email address:
 
-Kode ini berlaku selama 10 menit. Jangan bagikan kode ini kepada siapapun.
+OTP Code: %s
 
-Jika Anda tidak meminta kode ini, silakan abaikan email ini.
+Once your email is verified, you'll be ready to dive into %s's exciting features.
 
-Terima kasih,
-Tim %s
-`, s.config.EmailName, otpCode, s.config.EmailName)
+If you did not register with us, please ignore this email or contact our support team at %s.
+
+Thank you for choosing %s!
+
+Best regards,
+%s Team
+
+---
+This is an automated message, please do not reply to this email.
+`, emailName, otpCode, emailName, supportEmail, emailName, emailName)
 
 	return s.sendEmailHTML(to, subject, htmlBody, textBody)
 }
